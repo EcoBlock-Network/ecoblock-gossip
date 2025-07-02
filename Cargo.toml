@@ -1,6 +1,10 @@
 [package]
-name = "ecoblock_gossip"
+name = "ecoblock-gossip"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ecoblock_core = { path = "../ecoblock-core" }
+ecoblock-storage = { path = "../ecoblock-storage" }
+ecoblock_crypto = { path = "../ecoblock-crypto" }
+
