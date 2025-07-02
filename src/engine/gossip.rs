@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use ecoblock_storage::tangle::block::TangleBlock;
 
+#[derive(Debug)]
 pub struct GossipEngine {
     received_block_ids: HashSet<String>,
 }
@@ -14,11 +15,11 @@ impl GossipEngine {
 
     pub fn propagate_block(&mut self, block: &TangleBlock) {
         if !self.received_block_ids.insert(block.id.clone()) {
-            println!("⛔ BLOCK_DUPLICATE: Block already received: {}", block.id);
+            println!("Block : {}", block.id);
             return;
         }
 
-        println!("📡 BLOCK_PROPAGATE: Propagating block: {}", block.id);
+        println!("Propagate: {}", block.id);
     }
 
     pub fn has_received(&self, block_id: &str) -> bool {
