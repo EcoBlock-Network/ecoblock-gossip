@@ -25,25 +25,57 @@ impl GossipNode {
     }
 
     pub fn receive_block(&mut self, block: TangleBlock, visited: &mut HashSet<String>) {
+        println!("   NODE {}: Starting receive_block", self.id);
+        
+        // Prevent infinite loops by checking if this node was already visited
+        if visited.contains(&self.id) {
+            println!("   NODE {}: Already visited, stopping propagation", self.id);
+            return;
+        }
+        
+        // Check if we already have this block
         if self.engine.has_received(&block.id) {
-            println!("🔁 NODE {}: Already has block {}", self.id, block.id);
+            println!("   NODE {}: Already has block", self.id);
             return;
         }
 
+        // Process the block and mark node as visited
         self.engine.propagate_block(&block);
         visited.insert(self.id.clone());
 
-        let peers = self.peers.clone(); // clone avant lock
+        println!("   NODE {}: Received block", self.id);
 
-        for peer in peers {
-            let peer_id = peer.lock().unwrap().id.clone();
-            if visited.contains(&peer_id) {
-                continue;
+        // Clone peers to avoid borrow checker issues
+        let peers = self.peers.clone();
+        println!("   NODE {}: Has {} peers", self.id, peers.len());
+
+        // Propagate to all peers that haven't been visited yet
+        for (i, peer) in peers.iter().enumerate() {
+            // Get peer ID first, then check if it's already visited
+            let peer_id = {
+                let peer_lock = peer.lock().unwrap();
+                peer_lock.id.clone()
+            }; // Release lock immediately
+            
+            println!("   NODE {}: Checking peer {} (#{}/{})", self.id, peer_id, i+1, peers.len());
+            
+            if !visited.contains(&peer_id) {
+                let block_clone = block.clone();
+                println!("   NODE {}: Propagating to peer {}", self.id, peer_id);
+                
+                // Take lock only when needed and release immediately
+                {
+                    let mut peer_lock = peer.lock().unwrap();
+                    peer_lock.receive_block(block_clone, visited);
+                }
+                
+                println!("   NODE {}: Propagation to peer {} complete", self.id, peer_id);
+            } else {
+                println!("   NODE {}: Skipping peer {} (already visited)", self.id, peer_id);
             }
-
-            let block_clone = block.clone();
-            peer.lock().unwrap().receive_block(block_clone, visited);
         }
+        
+        println!("   NODE {}: Propagation complete", self.id);
     }
 
     pub fn has_block(&self, block_id: &str) -> bool {
