@@ -14,12 +14,14 @@ impl GossipEngine {
     }
 
     pub fn propagate_block(&mut self, block: &TangleBlock) {
+        // Check if we've already received this block
         if !self.received_block_ids.insert(block.id.clone()) {
-            println!("Block : {}", block.id);
+            // Block already received, no need to propagate again
             return;
         }
 
-        println!("Propagate: {}", block.id);
+        // New block received, propagate it
+        println!("   Propagate: {}", block.id);
     }
 
     pub fn has_received(&self, block_id: &str) -> bool {
