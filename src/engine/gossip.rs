@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use ecoblock_storage::tangle::block::TangleBlock;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GossipEngine {
     received_block_ids: HashSet<String>,
 }
